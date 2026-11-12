@@ -252,29 +252,29 @@ de vendas"). Clarity e Precision ficam ≥ 0.75 em todos os 15 exemplos.
 
 **Experimento do v2 com as 5 métricas ≥ 0.8**
 
-![Experimento com as métricas médias](docs/screenshots/01-experimento-metricas.jpg)
+![Experimento com as métricas médias](docs/evidencias/01-experimento-metricas.jpg)
 
 **Dataset de avaliação com os 15 exemplos**
 
-![Dataset com 15 exemplos](docs/screenshots/02-dataset-15-exemplos.jpg)
+![Dataset com 15 exemplos](docs/evidencias/02-dataset-15-exemplos.jpg)
 
 **Notas por exemplo (15/15 runs)**
 
-![Notas por exemplo](docs/screenshots/03-notas-por-exemplo.jpg)
+![Notas por exemplo](docs/evidencias/03-notas-por-exemplo.jpg)
 
 **Tracing detalhado de 3 exemplos** (entrada, saída gerada, referência e notas)
 
 1. Bug simples — "Botão de adicionar ao carrinho não funciona no produto ID 1234"
 
-   ![Trace do bug simples](docs/screenshots/04-trace-simples.jpg)
+   ![Trace do bug simples](docs/evidencias/04-trace-simples.jpg)
 
 2. Bug médio (segurança) — `/api/users/:id` sem validação de permissão
 
-   ![Trace do bug médio](docs/screenshots/05-trace-medio.jpg)
+   ![Trace do bug médio](docs/evidencias/05-trace-medio.jpg)
 
 3. Bug complexo — checkout com 4 falhas críticas (XSS, gateway, race condition, UX)
 
-   ![Trace do bug complexo](docs/screenshots/06-trace-complexo.jpg)
+   ![Trace do bug complexo](docs/evidencias/06-trace-complexo.jpg)
 
 ### Sem vazamento do dataset nos exemplos few-shot
 
