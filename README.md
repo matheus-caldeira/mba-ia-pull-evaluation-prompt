@@ -10,7 +10,7 @@ e Precision), com meta de **≥ 0.8 em todas**.
 - Prompt otimizado: [`prompts/bug_to_user_story_v2.yml`](prompts/bug_to_user_story_v2.yml)
 
 > **Resultado:** o v2 (`matheus-caldeira/bug_to_user_story_v2`) foi aprovado
-> com **todas as 5 métricas ≥ 0.8** (média 0.91). Dataset e experimentos
+> com **todas as 5 métricas ≥ 0.8** (média 0.92, após 3 iterações). Dataset e experimentos
 > públicos: <https://smith.langchain.com/public/71aedd8a-5637-4b11-a84c-0e65427e2b47/d>.
 > Detalhes em [Resultados Finais](#resultados-finais).
 
@@ -60,17 +60,19 @@ própria saída ("implementável sem reunião de esclarecimento"), não só um c
 justamente o que a v1 não especificava. Descrever um layout em prosa é muito
 menos eficaz do que mostrar uma saída pronta.
 
-**Como apliquei.** Seção `## Exemplos` com **3 pares entrada→saída completos**,
-um por nível de complexidade — a mesma divisão do dataset (5 simples, 7 médios,
-3 complexos):
+**Como apliquei.** Seção `## Exemplos` com **4 pares entrada→saída completos**,
+cobrindo os níveis de complexidade do dataset (5 simples, 7 médios, 3
+complexos) — os médios têm dois exemplos porque são a maior fatia e a que mais
+varia de formato:
 
 | Exemplo | Nível | Demonstra |
 | --- | --- | --- |
 | 1 — evento recorrente some da agenda | simples | parágrafo canônico + 5 bullets Gherkin, e **nada além disso** |
 | 2 — anexo de chat acessível após sair do canal | médio (segurança) | seções extras `Critérios Adicionais para Auditoria:` e `Contexto de Segurança:` |
-| 3 — upload de arquivos falha silenciosamente | complexo | cabeçalhos `=== ... ===`, blocos `A./B./C.` e tasks com prefixos `[SEGURANÇA]`, `[INFRA]` |
+| 3 — campo de CEP dispara uma consulta por tecla *(iteração 2)* | médio (técnico) | `Critérios Técnicos:` e `Contexto Técnico:` com atual × esperado e uma meta verificável |
+| 4 — upload de arquivos falha silenciosamente | complexo | cabeçalhos `=== ... ===`, blocos `A./B./C.` e tasks com prefixos `[SEGURANÇA]`, `[INFRA]` |
 
-Os três exemplos foram **escritos do zero**, em domínios que não aparecem no
+Os quatro exemplos foram **escritos do zero**, em domínios que não aparecem no
 dataset de avaliação, para que as métricas meçam generalização e não
 memorização (ver [Sem vazamento do dataset](#sem-vazamento-do-dataset-nos-exemplos-few-shot)).
 
@@ -84,7 +86,8 @@ de falhar" — que descreve o bug, não a história.
 
 **Como apliquei.** Roteiro de 5 passos, executado antes de escrever:
 
-> 1. Identifique QUEM é afetado pelo bug (...). Esse é o ator da história.
+> 1. Identifique QUEM é afetado pelo bug e em que contexto de uso (...).
+>    Na dúvida, o ator é a PESSOA que vê ou sofre o defeito (...).
 > 2. Identifique QUAL é o comportamento correto esperado — não o defeito. A
 >    User Story descreve o estado desejado, nunca o erro.
 > 3. Identifique POR QUE isso importa para o negócio ou para o usuário.
@@ -175,7 +178,7 @@ quebraria os 15 exemplos da avaliação de uma vez).
 | --- | --- | --- | --- |
 | 1 | Variável duplicada | `{bug_report}` no `system_prompt` **e** no `user_prompt` | Variável só no `user_prompt`; guarda em `push_prompts.py` impede regressão |
 | 2 | Persona genérica | "Você é um assistente que ajuda a transformar relatos de bugs" | Product Manager sênior, 10+ anos, com critério de qualidade explícito |
-| 3 | Zero exemplos | nenhuma saída de referência | 3 pares entrada→saída, um por nível de complexidade |
+| 3 | Zero exemplos | nenhuma saída de referência | 4 pares entrada→saída (simples, dois médios, complexo) |
 | 4 | Sem formato de saída | "crie uma user story a partir dele" | Formato canônico *Como/eu quero/para que* + Gherkin em PT-BR, texto plano |
 | 5 | Sem regras de comportamento | nenhuma | 6 regras numeradas (não inventar, comportamento ≠ defeito, critérios testáveis, preservar IDs técnicos, concisão, sem preâmbulo) |
 | 6 | Sem raciocínio guiado | resposta direta | CoT silencioso de 5 passos (ator → comportamento → benefício → complexidade → critérios) |
@@ -202,7 +205,7 @@ A aprovação exige as **cinco** ≥ 0.8, e não só a média.
 - Modelos: `gemini-2.5-flash-lite` gera a resposta; `gemini-2.5-flash` avalia
   (LLM-as-Judge), ambos com `temperature=0`.
 
-Saída real de `./venv/bin/python src/evaluate.py`:
+Saída real de `./venv/bin/python src/evaluate.py` na versão final (iteração 3):
 
 ```
 ==================================================
@@ -211,64 +214,103 @@ Prompt: matheus-caldeira/bug_to_user_story_v2
 
 Métricas Derivadas:
   - Helpfulness: 0.95 ✓
-  - Correctness: 0.89 ✓
+  - Correctness: 0.91 ✓
 
 Métricas Base:
-  - F1-Score: 0.82 ✓
+  - F1-Score: 0.86 ✓
   - Clarity: 0.94 ✓
-  - Precision: 0.95 ✓
+  - Precision: 0.96 ✓
 
 --------------------------------------------------
-📊 MÉDIA GERAL: 0.9097
+📊 MÉDIA GERAL: 0.9221
 --------------------------------------------------
 
 ✅ STATUS: APROVADO - Todas as métricas >= 0.8
 ```
 
-| Métrica | v2 | Mínimo |
-| --- | --- | --- |
-| Helpfulness | 0.95 | 0.8 |
-| Correctness | 0.89 | 0.8 |
-| F1-Score | 0.82 | 0.8 |
-| Clarity | 0.94 | 0.8 |
-| Precision | 0.95 | 0.8 |
-| **Média** | **0.91** | 0.8 |
-
 ### Iterações
 
-O v2 foi construído offline antes do acesso ao LangSmith, usando os 15 exemplos
-do dataset como referência de **estilo** (não de conteúdo — ver "Sem vazamento"
-abaixo): calibragem de tamanho por complexidade, formato canônico e Gherkin em
-PT-BR foram ajustados lendo as saídas de referência. Na primeira avaliação real
-ele já atingiu ≥ 0.8 nas cinco métricas, então não houve nova rodada.
+Foram 3 iterações; cada uma é um experimento no mesmo dataset, visível lado a
+lado no link público acima. Todas passaram de 0.8, mas o **F1-Score** — a
+métrica de recall/cobertura em relação à resposta de referência — estava no
+limite, então as rodadas 2 e 3 foram dirigidas pelo tracing dos exemplos com F1
+mais baixo.
 
-O ponto mais apertado é o **F1-Score (0.82)**: os exemplos com F1 mais baixo
-(#2 offline-first 0.62, #15 relatórios gerenciais 0.66, #13 carrinho 0.70) são
-os de relato longo, em que o modelo escolhe uma persona ou um recorte de
-critérios diferente do gabarito (ex.: "analista financeiro" em vez de "gerente
-de vendas"). Clarity e Precision ficam ≥ 0.75 em todos os 15 exemplos.
+| Iteração | Experimento | Helpfulness | Correctness | F1-Score | Clarity | Precision | Média |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | `…-ca25184c` | 0.95 | 0.89 | 0.82 | 0.94 | 0.95 | 0.910 |
+| 2 | `…-ff523dc1` | 0.95 | 0.89 | 0.82 | 0.95 | 0.95 | 0.912 |
+| 3 (final) | `…-cd5ddb75` | 0.95 | **0.91** | **0.86** | 0.94 | **0.96** | **0.922** |
+
+**Iteração 1 — versão inicial.** Role Prompting + Few-shot (3 exemplos) + CoT
+silencioso + regras e edge cases. Aprovada de primeira, mas com F1 0.82. O
+tracing mostrou que as respostas eram **precisas mas incompletas** (Precision
+0.95, recall baixo):
+
+- bugs médios saíam só com "Critérios de Aceitação", enquanto as referências
+  sempre trazem um bloco de contexto e, em geral, um bloco extra de critérios;
+- a regra "nunca invente números" impedia o modelo de definir uma meta: num
+  relatório que leva > 120 s, ele escreveu "no máximo 2 minutos" — o próprio
+  valor do bug;
+- um único bug com lista de detalhes era classificado como complexo e recebia
+  a estrutura `=== ... ===` inteira.
+
+**Iteração 2 — calibragem dos bugs médios.** Mudanças no v2:
+
+- bug médio passa a ter **sempre** um bloco complementar de critérios
+  (Prevenção / Acessibilidade / Técnicos / Admins / Exemplo de Cálculo) e um
+  bloco de contexto (Técnico / Segurança / do Bug) com atual × esperado;
+- regra 1 refinada: não inventar fatos **sobre o bug**, mas definir uma meta
+  verificável e melhor que o valor atual para o comportamento **esperado**;
+- complexidade redefinida: complexo só com **vários problemas numerados**; um
+  problema com muitos detalhes é médio;
+- complexos com `CRITÉRIOS TÉCNICOS` por problema e `Problemas Identificados`
+  no contexto;
+- novo exemplo few-shot (#3, campo de CEP) mostrando o bloco técnico.
+
+Resultado: os complexos subiram para F1 0.93–1.00, mas o F1 médio ficou em
+0.82, porque surgiram efeitos colaterais: a persona "o sistema" passou a ser
+usada em bugs de exibição (dashboard com contagem errada), o modelo ainda
+repetia o timeout como meta e escolhia o bloco complementar errado
+("Critérios Adicionais para Admins" num bug de modal).
+
+**Iteração 3 — persona, meta e bloco complementar.** Mudanças no v2:
+
+- persona no formato "<papel> <fazendo o quê>" e, na dúvida, a **pessoa** que
+  vê o defeito; "o sistema" só para falhas de bastidor (permissão em API,
+  webhook, validação de estoque/concorrência);
+- bugs simples com exatamente 5 bullets descrevendo a **regra geral** ("deve
+  corresponder ao total real"), não os valores do exemplo ("deve ser 42");
+- escolha do bloco complementar por uma tabela de prioridade (concorrência →
+  Prevenção; modal/foco → Acessibilidade; permissão → Admins; cálculo →
+  Exemplo de Cálculo; performance/integração → Técnicos);
+- meta de lentidão cerca de 4× melhor que o valor atual e sempre abaixo do
+  timeout (o exemplo na regra usa números que não existem no dataset).
+
+Resultado: F1 0.86, Correctness 0.91 e Precision 0.96 — a melhor das três, e
+a versão publicada como final no Hub.
 
 ### Screenshots
 
-**Experimento do v2 com as 5 métricas ≥ 0.8**
+**As 3 iterações (experimentos #1, #2 e #3) com as 5 métricas ≥ 0.8**
 
-![Experimento com as métricas médias](docs/evidencias/01-experimento-metricas.jpg)
+![Três experimentos com as métricas médias](docs/evidencias/01-experimento-metricas.jpg)
 
 **Dataset de avaliação com os 15 exemplos**
 
 ![Dataset com 15 exemplos](docs/evidencias/02-dataset-15-exemplos.jpg)
 
-**Notas por exemplo (15/15 runs)**
+**Notas por exemplo na iteração final (15/15 runs)**
 
 ![Notas por exemplo](docs/evidencias/03-notas-por-exemplo.jpg)
 
-**Tracing detalhado de 3 exemplos** (entrada, saída gerada, referência e notas)
+**Tracing detalhado de 3 exemplos da iteração final** (entrada, saída gerada, referência e notas)
 
 1. Bug simples — "Botão de adicionar ao carrinho não funciona no produto ID 1234"
 
    ![Trace do bug simples](docs/evidencias/04-trace-simples.jpg)
 
-2. Bug médio (segurança) — `/api/users/:id` sem validação de permissão
+2. Bug médio (interface) — modal de confirmação atrás do menu lateral, com `Critérios de Acessibilidade:`
 
    ![Trace do bug médio](docs/evidencias/05-trace-medio.jpg)
 
@@ -280,7 +322,7 @@ de vendas"). Clarity e Precision ficam ≥ 0.75 em todos os 15 exemplos.
 
 Um risco comum em few-shot é copiar itens do próprio dataset de avaliação para
 dentro do prompt: o modelo recebe o gabarito e a nota passa a medir cópia, não
-capacidade. Cada um dos 3 exemplos do v2 foi cruzado contra a entrada e a saída
+capacidade. Cada um dos 4 exemplos do v2 foi cruzado contra a entrada e a saída
 de referência dos 15 itens de `datasets/bug_to_user_story.jsonl` (texto
 normalizado: sem acentos, caixa baixa, espaços colapsados), por
 `difflib.SequenceMatcher` e pela fração de linhas idênticas:
@@ -290,14 +332,16 @@ Exemplo 1 entrada: max SequenceMatcher 0.335 (ex[2])  | linhas idênticas 0.000
 Exemplo 1 saida:   max SequenceMatcher 0.135 (ex[4])  | linhas idênticas 0.143
 Exemplo 2 entrada: max SequenceMatcher 0.211 (ex[2])  | linhas idênticas 0.000
 Exemplo 2 saida:   max SequenceMatcher 0.268 (ex[7])  | linhas idênticas 0.294
-Exemplo 3 entrada: max SequenceMatcher 0.235 (ex[3])  | linhas idênticas 0.000
-Exemplo 3 saida:   max SequenceMatcher 0.145 (ex[12]) | linhas idênticas 0.194
+Exemplo 3 entrada: max SequenceMatcher 0.210 (ex[3])  | linhas idênticas 0.200
+Exemplo 3 saida:   max SequenceMatcher 0.055 (ex[12]) | linhas idênticas 0.188
+Exemplo 4 entrada: max SequenceMatcher 0.235 (ex[3])  | linhas idênticas 0.286
+Exemplo 4 saida:   max SequenceMatcher 0.145 (ex[12]) | linhas idênticas 0.194
 maior similaridade: 0.335
 ```
 
-As linhas idênticas residuais são rótulos estruturais (`Critérios de
-Aceitação:`, `Contexto de Segurança:`, `Severidade: ALTA`, `=== CONTEXTO DO BUG
-===`) — exatamente o vocabulário de formato que o few-shot existe para ensinar.
+As linhas idênticas residuais são rótulos estruturais (`Detalhes:`,
+`PROBLEMAS IDENTIFICADOS:`, `Critérios de Aceitação:`, `Contexto de
+Segurança:`, `Severidade: ALTA`, `=== CONTEXTO DO BUG ===`) — exatamente o vocabulário de formato que o few-shot existe para ensinar.
 
 ### Testes de validação
 
