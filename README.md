@@ -333,8 +333,9 @@ tests/test_prompts.py::TestPrompts::test_minimum_techniques PASSED
 - Conta no **LangSmith** com:
   - `LANGSMITH_API_KEY` — em *Settings → API Keys*
   - **handle público do Hub** (`USERNAME_LANGSMITH_HUB`) — criado ao tornar um
-    prompt público pela primeira vez (ver passo 1 em
-    [Passo a passo para concluir](#passo-a-passo-para-concluir))
+    prompt público pela primeira vez: em *Prompts*, abra ou crie um prompt →
+    **três pontinhos** ao lado de *Playground* → **Make Public** → **Choose your
+    public handle** (o handle é definitivo)
 - **Uma** chave de LLM:
   - `GOOGLE_API_KEY` — https://aistudio.google.com/app/apikey (tem tier gratuito,
     com limites que mudam com frequência), **ou**
@@ -426,6 +427,20 @@ Cria (ou reaproveita) o dataset `{LANGSMITH_PROJECT}-eval` com os 15 exemplos de
 grava as 5 notas como feedback no experimento e imprime o link dele. São cerca
 de 60 chamadas de LLM por execução (15 gerações + avaliações), o que pode
 esbarrar no *rate limit* do tier gratuito do Gemini.
+
+Se alguma métrica ficar abaixo de 0.8: abra o tracing dos piores exemplos no
+LangSmith, ajuste `prompts/bug_to_user_story_v2.yml`, rode os testes, o push e a
+avaliação de novo. Cada execução vira um novo experimento no mesmo dataset.
+
+### 8. Link público do dataset *(uma única vez)*
+
+O link impresso pelo `evaluate.py` só abre para quem tem acesso ao workspace.
+Para um endereço público (dataset + experimentos), compartilhe o dataset
+**uma vez** — cada novo compartilhamento muda o link:
+
+```bash
+./venv/bin/python -c "from dotenv import load_dotenv; load_dotenv(); import os; from langsmith import Client; print(Client().share_dataset(dataset_name=os.environ['LANGSMITH_PROJECT'] + '-eval')['url'])"
+```
 
 ### Resumo das fases
 
